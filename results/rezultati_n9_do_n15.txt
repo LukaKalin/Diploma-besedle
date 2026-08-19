@@ -1,0 +1,214 @@
+9-crkovnih:  2684
+10-crkovnih: 2164
+11-crkovnih: 1613
+12-crkovnih: 1128
+13-crkovnih: 691
+14-crkovnih: 385
+15-crkovnih: 203
+
+Predizracunavam 2684x2684 obarvanj...
+  0/2684
+  200/2684
+  400/2684
+  600/2684
+  800/2684
+  1000/2684
+  1200/2684
+  1400/2684
+  1600/2684
+  1800/2684
+  2000/2684
+  2200/2684
+  2400/2684
+  2600/2684
+Predizracun koncan!
+
+Racunam: 9-crkovne  (2684, 6 potez)...
+  calls=10000 t=5 n=3 memo=350 hits=35
+  calls=20000 t=2 n=1 memo=661 hits=200
+  calls=30000 t=5 n=3 memo=1091 hits=389
+  calls=40000 t=2 n=1 memo=1514 hits=1035
+  calls=50000 t=2 n=1 memo=2119 hits=1329
+  calls=60000 t=2 n=1 memo=2722 hits=1383
+  calls=70000 t=2 n=1 memo=3299 hits=1460
+  calls=80000 t=2 n=1 memo=4072 hits=1554
+  calls=90000 t=1 n=38 memo=4599 hits=1714
+  calls=100000 t=2 n=2 memo=5104 hits=1880
+  calls=110000 t=2 n=2 memo=6098 hits=2027
+  calls=120000 t=5 n=6 memo=6568 hits=2278
+  calls=130000 t=2 n=1 memo=6895 hits=2621
+  calls=140000 t=3 n=5 memo=7365 hits=2799
+  calls=150000 t=1 n=4 memo=8411 hits=2909
+  calls=160000 t=2 n=1 memo=9004 hits=3170
+  calls=170000 t=2 n=3 memo=9522 hits=3563
+  calls=180000 t=1 n=1 memo=10343 hits=3808
+  calls=190000 t=3 n=1 memo=10868 hits=4180
+  calls=200000 t=2 n=3 memo=11461 hits=4640
+  calls=210000 t=3 n=1 memo=11992 hits=5005
+  calls=220000 t=2 n=1 memo=12645 hits=5193
+  calls=230000 t=2 n=1 memo=13274 hits=5417
+  calls=240000 t=2 n=2 memo=13992 hits=5604
+  calls=250000 t=2 n=5 memo=14576 hits=6412
+  calls=260000 t=3 n=3 memo=15133 hits=6853
+  calls=270000 t=2 n=1 memo=15828 hits=7310
+  calls=280000 t=2 n=3 memo=16374 hits=7617
+  calls=290000 t=2 n=1 memo=17066 hits=7837
+  calls=300000 t=1 n=1 memo=17774 hits=8217
+  calls=310000 t=3 n=1 memo=18430 hits=8846
+  calls=320000 t=1 n=1 memo=19061 hits=9121
+  calls=330000 t=2 n=1 memo=19661 hits=9545
+  calls=340000 t=1 n=1 memo=20533 hits=9961
+  calls=350000 t=2 n=1 memo=20921 hits=10350
+  calls=360000 t=1 n=2 memo=21894 hits=10603
+  calls=370000 t=2 n=1 memo=22352 hits=10775
+  calls=380000 t=2 n=1 memo=23018 hits=11528
+  calls=390000 t=2 n=2 memo=23859 hits=11809
+  calls=400000 t=5 n=5 memo=24194 hits=12106
+  calls=410000 t=5 n=7 memo=24280 hits=12415
+  calls=420000 t=2 n=1 memo=24332 hits=12731
+  calls=430000 t=2 n=1 memo=24589 hits=13938
+  calls=440000 t=1 n=1 memo=25612 hits=14173
+  calls=450000 t=2 n=1 memo=26095 hits=14345
+  calls=460000 t=2 n=1 memo=26954 hits=14585
+  calls=470000 t=3 n=1 memo=27534 hits=15011
+  calls=480000 t=2 n=1 memo=28123 hits=15443
+  calls=490000 t=1 n=1 memo=29045 hits=15737
+
+=== 9-crkovne  (2684, 6 potez) ===
+V* = 2.5611
+Cas: 33.93s (0.00942499 ur)
+Memo size: 29488
+Memo hits: 15914
+Compute calls: 495964
+
+Predizracunavam 2164x2164 obarvanj...
+  0/2164
+  200/2164
+  400/2164
+  600/2164
+  800/2164
+  1000/2164
+  1200/2164
+  1400/2164
+  1600/2164
+  1800/2164
+  2000/2164
+Predizracun koncan!
+
+Racunam: 10-crkovne (2164, 5 potez)...
+  calls=10000 t=2 n=1 memo=409 hits=83
+  calls=20000 t=2 n=2 memo=1289 hits=161
+  calls=30000 t=2 n=1 memo=1834 hits=268
+  calls=40000 t=2 n=1 memo=2659 hits=380
+  calls=50000 t=2 n=1 memo=3376 hits=494
+  calls=60000 t=2 n=1 memo=4219 hits=624
+  calls=70000 t=2 n=1 memo=4823 hits=752
+  calls=80000 t=2 n=1 memo=5665 hits=866
+  calls=90000 t=2 n=1 memo=6391 hits=1043
+  calls=100000 t=1 n=3 memo=7215 hits=1189
+  calls=110000 t=2 n=1 memo=7926 hits=1367
+  calls=120000 t=1 n=1 memo=8565 hits=1516
+  calls=130000 t=2 n=1 memo=9265 hits=1816
+  calls=140000 t=1 n=1 memo=10054 hits=1930
+
+=== 10-crkovne (2164, 5 potez) ===
+V* = 2.41405
+Cas: 8.61627s (0.00239341 ur)
+Memo size: 10055
+Memo hits: 1930
+Compute calls: 140511
+
+Predizracunavam 1613x1613 obarvanj...
+  0/1613
+  200/1613
+  400/1613
+  600/1613
+  800/1613
+  1000/1613
+  1200/1613
+  1400/1613
+  1600/1613
+Predizracun koncan!
+
+Racunam: 11-crkovne (1613, 5 potez)...
+  calls=10000 t=1 n=1 memo=706 hits=16
+  calls=20000 t=2 n=1 memo=1499 hits=58
+  calls=30000 t=2 n=1 memo=2249 hits=99
+  calls=40000 t=1 n=1 memo=2930 hits=149
+  calls=50000 t=1 n=3 memo=3665 hits=213
+
+=== 11-crkovne (1613, 5 potez) ===
+V* = 2.28022
+Cas: 2.26216s (0.000628377 ur)
+Memo size: 3775
+Memo hits: 226
+Compute calls: 53196
+
+Predizracunavam 1128x1128 obarvanj...
+  0/1128
+  200/1128
+  400/1128
+  600/1128
+  800/1128
+  1000/1128
+Predizracun koncan!
+
+Racunam: 12-crkovne (1128, 4 potez)...
+  calls=10000 t=1 n=1 memo=796 hits=28
+  calls=20000 t=1 n=1 memo=1332 hits=66
+  calls=30000 t=2 n=1 memo=1875 hits=105
+
+=== 12-crkovne (1128, 4 potez) ===
+V* = 2.17642
+Cas: 0.703481s (0.000195411 ur)
+Memo size: 2052
+Memo hits: 143
+Compute calls: 35697
+
+Predizracunavam 691x691 obarvanj...
+  0/691
+  200/691
+  400/691
+  600/691
+Predizracun koncan!
+
+Racunam: 13-crkovne (691,  4 potez)...
+  calls=10000 t=1 n=2 memo=503 hits=18
+  calls=20000 t=1 n=1 memo=758 hits=58
+
+=== 13-crkovne (691,  4 potez) ===
+V* = 2.09986
+Cas: 0.176273s (4.89646e-05 ur)
+Memo size: 902
+Memo hits: 84
+Compute calls: 28046
+
+Predizracunavam 385x385 obarvanj...
+  0/385
+  200/385
+Predizracun koncan!
+
+Racunam: 14-crkovne (385,  3 potez)...
+  calls=10000 t=1 n=1 memo=101 hits=10
+
+=== 14-crkovne (385,  3 potez) ===
+V* = 2.03377
+Cas: 0.0251439s (6.98442e-06 ur)
+Memo size: 117
+Memo hits: 11
+Compute calls: 13110
+
+Predizracunavam 203x203 obarvanj...
+  0/203
+  200/203
+Predizracun koncan!
+
+Racunam: 15-crkovne (203,  3 potez)...
+
+=== 15-crkovne (203,  3 potez) ===
+V* = 2.00493
+Cas: 0.00529891s (1.47192e-06 ur)
+Memo size: 5
+Memo hits: 1
+Compute calls: 4108
+
