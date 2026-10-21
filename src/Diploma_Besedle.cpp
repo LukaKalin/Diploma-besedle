@@ -1,13 +1,4 @@
-// ============================================================
-// Optimalno reševanje igre Besedle
-// Avtor: Luka Kalin
-// Opis: Implementacija DP algoritma za iskanje optimalne
-//       strategije ugibanja v igri Besedle (slovenska verzija Wordle)
-// Vir:  Bertsimas D, Paskov A. An Exact and Interpretable
-//       Solution to Wordle.
-// ============================================================
-
-#include <iostream>
+﻿#include <iostream>
 #include <fstream>
 #include <vector>
 #include <string>
@@ -18,6 +9,7 @@
 #include <unordered_map>
 #include <omp.h>
 #include <mutex>
+#include <cmath>
 
 // ============================================================
 // GLOBALNE SPREMENLJIVKE
@@ -46,13 +38,10 @@ std::vector<uint32_t> utf8_v_unicode(const std::string& s) {
         unsigned char c = s[i];
         uint32_t cp;
         if (c < 0x80) {
-            cp = c; i++;
-        } else if (c < 0xE0) {
-            cp = (c & 0x1F) << 6 | (s[i+1] & 0x3F); i += 2;
-        } else if (c < 0xF0) {
-            cp = (c & 0x0F) << 12 | (s[i+1] & 0x3F) << 6 | (s[i+2] & 0x3F); i += 3;
-        } else {
-            cp = (c & 0x07) << 18 | (s[i+1] & 0x3F) << 12 | (s[i+2] & 0x3F) << 6 | (s[i+3] & 0x3F); i += 4;
+            cp = c; i++;          // ASCII
+        }
+        else {
+            cp = (c & 0x1F) << 6 | (s[i + 1] & 0x3F); i += 2;  // 2-bajtni (č, š, ž)
         }
         result.push_back(cp);
     }
@@ -150,16 +139,16 @@ void predizracunaj(
         g_resitve_idx[kandidati[j]] = j;
     }
 
-    int nu = ugibanja.size();
-    int nk = kandidati.size();
-    g_tabela.assign(nu, std::vector<std::string>(nk));
+    int st_ugibanj = ugibanja.size();
+    int st_kandidati = kandidati.size();
+    g_tabela.assign(st_ugibanj, std::vector<std::string>(st_kandidati));
 
-    std::cout << "Predizracunavam " << nu << "x" << nk << " obarvanj...\n";
-    for (int i = 0; i < nu; i++) {
-        for (int j = 0; j < nk; j++)
+    std::cout << "Predizracunavam " << st_ugibanj << "x" << st_kandidati << " obarvanj...\n";
+    for (int i = 0; i < st_ugibanj; i++) {
+        for (int j = 0; j < st_kandidati; j++)
             g_tabela[i][j] = get_coloring(ugibanja[i], kandidati[j]);
         if (i % 200 == 0)
-            std::cout << "  " << i << "/" << nu << "\n";
+            std::cout << "  " << i << "/" << st_ugibanj << "\n";
     }
     std::cout << "Predizracun koncan!\n\n";
 }
@@ -168,22 +157,25 @@ void predizracunaj(
 // PREHODI MED STANJI
 // ============================================================
 
+//slovar ključ[obarvanje] -> kandidati
+
 std::unordered_map<std::string, std::vector<std::string>> get_transitions(
     const std::vector<std::string>& kandidati,
     const std::string& ugibanje)
 {
     std::unordered_map<std::string, std::vector<std::string>> prehodi;
-    auto u_it = g_ugibanja_idx.find(ugibanje);
+    auto ugibanje_it = g_ugibanja_idx.find(ugibanje);
 
     for (const auto& kandidat : kandidati) {
         std::string obarvanje;
-        if (u_it != g_ugibanja_idx.end()) {
-            auto k_it = g_kandidati_idx.find(kandidat);
-            if (k_it != g_kandidati_idx.end())
-                obarvanje = g_tabela[u_it->second][k_it->second];
+        if (ugibanje_it != g_ugibanja_idx.end()) {
+            auto kandidat_it = g_kandidati_idx.find(kandidat);
+            if (kandidat_it != g_kandidati_idx.end())
+                obarvanje = g_tabela[ugibanje_it->second][kandidat_it->second];
             else
                 obarvanje = get_coloring(ugibanje, kandidat);
-        } else {
+        }
+        else {
             obarvanje = get_coloring(ugibanje, kandidat);
         }
         prehodi[obarvanje].push_back(kandidat);
@@ -222,33 +214,31 @@ double compute_V(
     const std::vector<std::string>& kandidati,
     const std::vector<std::string>& vsi_slovar,
     int t,
-    int max_potez)  // maksimalno število potez
+    int max_potez)
 {
     int n = (int)kandidati.size();
-    #pragma omp atomic
+#pragma omp atomic
     compute_calls++;
 
-    if (compute_calls % 10000 == 0) {
+    if (compute_calls % 100000 == 0) {
         std::cout << "  calls=" << compute_calls
-                << " t=" << t
-                << " n=" << n
-                << " memo=" << memo.size()
-                << " hits=" << memo_hits << "\n";
+            << " t=" << t
+            << " n=" << n
+            << " memo=" << memo.size()
+            << " hits=" << memo_hits << "\n";
         std::cout.flush();
     }
 
     int word_len = dolzina(kandidati[0]);
     std::string vse_zelene(word_len, 'Z');
 
-    // Optimizacija 1: skrajšanje horizonta
     if (t >= max_potez || (t == max_potez - 1 && n > 1))
         return 1e18;
 
-    // Robni pogoji
     if (n == 1) return 1.0;
     if (n == 2) return 1.5;
 
-    // Memoizacija
+    // Preveri memoizacijsko tabelo – če je bil ta nabor kandidatov že izračunan, vrni shranjeno vrednost.
     std::string k = kljuc(kandidati);
     {
         std::lock_guard<std::mutex> lock(memo_mutex);
@@ -259,9 +249,9 @@ double compute_V(
         }
     }
 
+    // Optimizacija: kandidati se preizkusijo pred ostalimi besedami iz slovarja.
     double najboljsa_vrednost = 1e18;
 
-    // Optimizacija 5 + 3: vrstni red ugibanj
     std::set<std::string> kandidati_set(kandidati.begin(), kandidati.end());
     std::vector<std::string> vrstni_red;
     for (const auto& b : kandidati)
@@ -270,7 +260,7 @@ double compute_V(
         if (!kandidati_set.count(b))
             vrstni_red.push_back(b);
 
-#pragma omp parallel num_threads(6)
+#pragma omp parallel num_threads(8)
     {
         double lokalna_najboljsa = 1e18;
 
@@ -284,18 +274,17 @@ double compute_V(
                 prehodi.find(std::string(word_len, 'S')) != prehodi.end())
                 continue;
 
-            // Optimizacija 4: spodnje meje za pruning
+            // izračunamo optimistično oceno vrednosti tega ugibanja
             double vrednost = 1.0;
             for (const auto& par : prehodi) {
                 if (par.first == vse_zelene) continue;
                 vrednost += (double)par.second.size() / n
-                            * spodnja_meja((int)par.second.size());
+                    * spodnja_meja((int)par.second.size());
             }
 
             if (vrednost >= lokalna_najboljsa)
                 continue;
 
-            // Sortiraj po verjetnosti
             std::vector<std::pair<double, std::vector<std::string>>> sortirani;
             for (const auto& par : prehodi) {
                 if (par.first == vse_zelene) continue;
@@ -305,7 +294,6 @@ double compute_V(
             std::sort(sortirani.begin(), sortirani.end(),
                 [](const auto& a, const auto& b) { return a.first > b.first; });
 
-            // Natančen izračun z pruningom
             vrednost = 1.0;
             bool prune = false;
 
@@ -400,31 +388,101 @@ double evaluiraj(
 }
 
 // ============================================================
+// EKSPERIMENTALNA POTRDITEV
+// ============================================================
+
+// Simulira eno igro z optimalno strategijo (bere iz memo)
+int simuliraj_optimalno(
+    const std::string& skrita,
+    const std::vector<std::string>& resitve,
+    int max_potez)
+{
+    std::vector<std::string> kandidati = resitve;
+    int poteze = 0;
+    int word_len = dolzina(skrita);
+    std::string vse_zelene(word_len, 'Z');
+
+    while (true) {
+        poteze++;
+
+        if (kandidati.size() == 1) {
+            if (get_coloring(kandidati[0], skrita) == vse_zelene)
+                return poteze;
+        }
+
+        // Poišči najboljše ugibanje med kandidati
+        std::string najboljse = kandidati[0];
+        double najboljsa_v = 1e18;
+
+        for (const auto& ugibanje : kandidati) {
+            auto prehodi = get_transitions(kandidati, ugibanje);
+            double vrednost = 1.0;
+            bool ok = true;
+
+            for (const auto& par : prehodi) {
+                if (par.first == vse_zelene) continue;
+                double v = compute_V(par.second, resitve, 1, max_potez);
+                if (v >= 1e17) { ok = false; break; }
+                vrednost += (double)par.second.size() / kandidati.size() * v;
+            }
+
+            if (ok && vrednost < najboljsa_v) {
+                najboljsa_v = vrednost;
+                najboljse = ugibanje;
+            }
+        }
+
+        std::string obarvanje = get_coloring(najboljse, skrita);
+        if (obarvanje == vse_zelene) return poteze;
+        kandidati = filter_words(kandidati, najboljse, obarvanje);
+    }
+}
+
+// Evaluira optimalno strategijo in vrne povprečje
+double evaluiraj_optimalno(
+    const std::vector<std::string>& resitve,
+    int max_potez)
+{
+    double skupaj = 0;
+    std::map<int, int> porazdelitev;
+
+    for (const auto& skrita : resitve) {
+        int p = simuliraj_optimalno(skrita, resitve, max_potez);
+        skupaj += p;
+        porazdelitev[p]++;
+    }
+
+    double povprecje = skupaj / resitve.size();
+
+    std::cout << "Porazdelitev ugibanj:\n";
+    for (const auto& par : porazdelitev)
+        std::cout << "  " << par.first << " ugibanj: " << par.second << " besed\n";
+
+    return povprecje;
+}
+
+// ============================================================
 // GLAVNA FUNKCIJA
 // ============================================================
 
 int main() {
-    // Naloži vse slovarje
-    auto resitve_3_200  = nalozi_besede("data/resitve_3_200.txt");
-    auto resitve_3_300  = nalozi_besede("data/resitve_3_300.txt");
-    auto resitve_4_300  = nalozi_besede("data/resitve_4_300.txt");
-    auto resitve_4_500  = nalozi_besede("data/resitve_4_500.txt");
-    auto resitve_5_500  = nalozi_besede("data/resitve_5_500.txt");
-    auto resitve_5_1861 = nalozi_besede("data/besedle_resitve.txt");
-    auto resitve_6      = nalozi_besede("data/resitve_6.txt");
-    auto resitve_7      = nalozi_besede("data/resitve_7.txt");
-    auto resitve_8      = nalozi_besede("data/resitve_8.txt");
-    auto resitve_9      = nalozi_besede("data/resitve_9.txt");
-    auto resitve_10     = nalozi_besede("data/resitve_10.txt");
-    auto resitve_11     = nalozi_besede("data/resitve_11.txt");
-    auto resitve_12     = nalozi_besede("data/resitve_12.txt");
-    auto resitve_13     = nalozi_besede("data/resitve_13.txt");
-    auto resitve_14     = nalozi_besede("data/resitve_14.txt");
-    auto resitve_15     = nalozi_besede("data/resitve_15.txt");
 
-    // 5-crkovne manjsi nabor
-    std::vector<std::string> resitve_5_500v(
-        resitve_5_500.begin(), resitve_5_500.begin() + 500);
+    auto resitve_3_200 = nalozi_besede("resitve_3_200.txt");
+    auto resitve_3_300 = nalozi_besede("resitve_3_300.txt");
+    auto resitve_4_300 = nalozi_besede("resitve_4_300.txt");
+    auto resitve_4_500 = nalozi_besede("resitve_4_500.txt");
+    auto resitve_5_500 = nalozi_besede("resitve_5_500.txt");
+    auto resitve_5_1861 = nalozi_besede("besedle_resitve.txt");
+    auto resitve_6 = nalozi_besede("resitve_6.txt");
+    auto resitve_7 = nalozi_besede("resitve_7.txt");
+    auto resitve_8 = nalozi_besede("resitve_8.txt");
+    auto resitve_9 = nalozi_besede("resitve_9.txt");
+    auto resitve_10 = nalozi_besede("resitve_10.txt");
+    auto resitve_11 = nalozi_besede("resitve_11.txt");
+    auto resitve_12 = nalozi_besede("resitve_12.txt");
+    auto resitve_13 = nalozi_besede("resitve_13.txt");
+    auto resitve_14 = nalozi_besede("resitve_14.txt");
+    auto resitve_15 = nalozi_besede("resitve_15.txt");
 
     struct Test {
         std::string ime;
@@ -433,31 +491,26 @@ int main() {
     };
 
     std::vector<Test> testi = {
-        // 3-crkovne - manjsi nabori ker je potrebnih vec potez
-        {"3-crkovne (200, 9 potez)",  resitve_3_200,  9},
-        {"3-crkovne (300, 9 potez)",  resitve_3_300,  9},
-        // 4-crkovne
-        {"4-crkovne (300, 8 potez)",  resitve_4_300,  8},
-        {"4-crkovne (500, 8 potez)",  resitve_4_500,  8},
-        // 5-crkovne - Besedle igra
-        {"5-crkovne (500, 6 potez)",  resitve_5_500v, 6},
+        {"3-crkovne (200, 9 potez)",          resitve_3_200,  9},
+        {"3-crkovne (300, 9 potez)",          resitve_3_300,  9},
+        {"4-crkovne (300, 8 potez)",          resitve_4_300,  8},
+        {"4-crkovne (500, 8 potez)",          resitve_4_500,  8},
+        {"5-crkovne (500, 6 potez)",          resitve_5_500,  6},
         {"5-crkovne Besedle (1861, 6 potez)", resitve_5_1861, 6},
-        // 6-15 crkovne - cel nabor
-        {"6-crkovne  (2566, 7 potez)", resitve_6,  7},
-        {"7-crkovne  (2943, 7 potez)", resitve_7,  7},
-        {"8-crkovne  (2926, 6 potez)", resitve_8,  6},
-        {"9-crkovne  (2684, 6 potez)", resitve_9,  6},
-        {"10-crkovne (2164, 5 potez)", resitve_10, 5},
-        {"11-crkovne (1613, 5 potez)", resitve_11, 5},
-        {"12-crkovne (1128, 4 potez)", resitve_12, 4},
-        {"13-crkovne (691,  4 potez)", resitve_13, 4},
-        {"14-crkovne (385,  3 potez)", resitve_14, 3},
-        {"15-crkovne (203,  3 potez)", resitve_15, 3},
+        {"6-crkovne  (2566, 7 potez)",        resitve_6,      7},
+        {"7-crkovne  (2943, 7 potez)",        resitve_7,      7},
+        {"8-crkovne  (2926, 6 potez)",        resitve_8,      6},
+        {"9-crkovne  (2684, 6 potez)",        resitve_9,      6},
+        {"10-crkovne (2164, 5 potez)",        resitve_10,     5},
+        {"11-crkovne (1613, 5 potez)",        resitve_11,     5},
+        {"12-crkovne (1128, 4 potez)",        resitve_12,     4},
+        {"13-crkovne (691,  4 potez)",        resitve_13,     4},
+        {"14-crkovne (385,  3 potez)",        resitve_14,     3},
+        {"15-crkovne (203,  3 potez)",        resitve_15,     3},
     };
 
     for (auto& test : testi) {
         predizracunaj(test.besede, test.besede);
-
         memo.clear();
         compute_calls = 0;
         memo_hits = 0;
@@ -465,17 +518,60 @@ int main() {
         std::cout << "Racunam: " << test.ime << "...\n";
         std::cout.flush();
 
+        // Korak 1: DP izračun
         auto start = std::chrono::high_resolution_clock::now();
         double v = compute_V(test.besede, test.besede, 0, test.max_potez);
         auto end = std::chrono::high_resolution_clock::now();
-
         double sek = std::chrono::duration<double>(end - start).count();
+
+        //// Korak 2: eksperimentalna potrditev
+        std::cout << "Eksperimentalna potrditev...\n";
+        std::cout.flush();
+        auto start_exp = std::chrono::high_resolution_clock::now();
+        double exp_v = evaluiraj_optimalno(test.besede, test.max_potez);
+        auto end_exp = std::chrono::high_resolution_clock::now();
+        double sek_exp = std::chrono::duration<double>(end_exp - start_exp).count();
+
+        //// Korak 3: primerjava strategij
+        srand(42);
+        double nakljucna = evaluiraj(test.besede, 0);
+        double hevristicna = evaluiraj(test.besede, 1);
+
+        // Korak 4: optimalni prvi ugib
+        std::cout << "Iscemo optimalni prvi ugib...\n";
+        std::cout.flush();
+        std::string najboljsi_zacetek;
+        double najboljsa_v_zacetek = 1e18;
+        int word_len = dolzina(test.besede[0]);
+        std::string vse_zelene(word_len, 'Z');
+
+        for (const auto& ugibanje : test.besede) {
+            auto prehodi = get_transitions(test.besede, ugibanje);
+            double vrednost = 1.0;
+            bool ok = true;
+            for (const auto& par : prehodi) {
+                if (par.first == vse_zelene) continue;
+                double vn = compute_V(par.second, test.besede, 1, test.max_potez);
+                if (vn >= 1e17) { ok = false; break; }
+                vrednost += (double)par.second.size() / test.besede.size() * vn;
+            }
+            if (ok && vrednost < najboljsa_v_zacetek) {
+                najboljsa_v_zacetek = vrednost;
+                najboljsi_zacetek = ugibanje;
+            }
+        }
+
         std::cout << "\n=== " << test.ime << " ===\n";
-        std::cout << "V* = " << v << "\n";
-        std::cout << "Cas: " << sek << "s\n";
-        std::cout << "Memo size: " << memo.size() << "\n";
-        std::cout << "Memo hits: " << memo_hits << "\n";
-        std::cout << "Compute calls: " << compute_calls << "\n\n";
+        std::cout << "V* (izracunan):     " << v << "\n";
+        std::cout << "V* (eksperiment):   " << exp_v << "\n";
+        std::cout << "Razlika:            " << std::abs(v - exp_v) << "\n";
+        std::cout << "Cas DP:             " << sek << "s\n";
+        std::cout << "Cas eksperiment:    " << sek_exp << "s\n";
+        std::cout << "Nakljucna:          " << nakljucna << "\n";
+        std::cout << "Hevristicna:        " << hevristicna << "\n";
+        std::cout << "Memo size:          " << memo.size() << "\n";
+        std::cout << "Compute calls:      " << compute_calls << "\n";
+        std::cout << "Optimalni zacetek:  " << najboljsi_zacetek << "\n\n";
         std::cout.flush();
     }
 
