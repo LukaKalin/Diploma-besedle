@@ -3,7 +3,7 @@
 Diplomska naloga – Fakulteta za računalništvo in informatiko, Univerza v Ljubljani
 
 **Avtor:** Luka Kalin  
-**Mentor:** prof. Tomaž Hočevar  
+**Mentor:** doc. dr. Tomaž Hočevar  
 **Vir:** Bertsimas D, Paskov A. [An Exact and Interpretable Solution to Wordle](https://auction-upload-files.s3.amazonaws.com/Wordle_Paper_Final.pdf)
 
 ---
